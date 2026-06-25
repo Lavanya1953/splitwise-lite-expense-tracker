@@ -71,6 +71,79 @@
   font-size: 0.875rem;
 }
 
+.group-selector {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.group-selector-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.group-select-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.group-select-field > span {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.group-action-btn {
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.group-action-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.group-delete-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.group-members-summary {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.group-create-form {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.group-create-form h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.group-create-form .submit-btn {
+  margin-top: 0.5rem;
+}
+
 .app-main {
   display: grid;
   grid-template-columns: 1fr 1fr;

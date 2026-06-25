@@ -1,11 +1,16 @@
-export const GROUP_MEMBERS = ['Amit', 'Rahul', 'Sneha'] as const
+export type Member = string
 
-export type Member = (typeof GROUP_MEMBERS)[number]
+export type SplitPercentages = Record<string, number>
 
-export type SplitPercentages = Record<Member, number>
+export interface Group {
+  id: string
+  name: string
+  members: Member[]
+}
 
 export interface Expense {
   id: string
+  groupId: string
   description: string
   amount: number
   payer: Member
@@ -23,6 +28,11 @@ export interface MemberBalance {
   net: number
 }
 
+export interface CreateGroupInput {
+  name: string
+  members: Member[]
+}
+
 export interface CreateExpenseInput {
   description: string
   amount: number
@@ -35,3 +45,5 @@ export interface SettlementResponse {
   settlements: Settlement[]
   netBalances: MemberBalance[]
 }
+
+export const DEFAULT_GROUP_MEMBERS = ['Amit', 'Rahul', 'Sneha'] as const

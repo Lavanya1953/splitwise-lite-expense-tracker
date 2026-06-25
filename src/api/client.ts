@@ -1,8 +1,10 @@
 import type {
   CreateExpensePayload,
+  CreateGroupPayload,
   Expense,
+  Group,
+  GroupDetail,
   Member,
-  MembersResponse,
   SettlementResponse,
   SplitPercentages,
 } from '../types'
@@ -27,27 +29,47 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>
 }
 
-export function fetchMembers(): Promise<MembersResponse> {
-  return request<MembersResponse>('/members')
+export function fetchGroups(): Promise<Group[]> {
+  return request<Group[]>('/groups')
 }
 
-export function fetchExpenses(): Promise<Expense[]> {
-  return request<Expense[]>('/expenses')
-}
-
-export function createExpense(payload: CreateExpensePayload): Promise<Expense> {
-  return request<Expense>('/expenses', {
+export function createGroup(payload: CreateGroupPayload): Promise<Group> {
+  return request<Group>('/groups', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
 }
 
-export function deleteExpense(id: string): Promise<void> {
-  return request<void>(`/expenses/${id}`, { method: 'DELETE' })
+export function deleteGroup(groupId: string): Promise<void> {
+  return request<void>(`/groups/${groupId}`, { method: 'DELETE' })
 }
 
-export function fetchSettlements(): Promise<SettlementResponse> {
-  return request<SettlementResponse>('/settlements')
+export function fetchGroup(groupId: string): Promise<GroupDetail> {
+  return request<GroupDetail>(`/groups/${groupId}`)
+}
+
+export function fetchExpenses(groupId: string): Promise<Expense[]> {
+  return request<Expense[]>(`/groups/${groupId}/expenses`)
+}
+
+export function createExpense(
+  groupId: string,
+  payload: CreateExpensePayload,
+): Promise<Expense> {
+  return request<Expense>(`/groups/${groupId}/expenses`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function deleteExpense(groupId: string, expenseId: string): Promise<void> {
+  return request<void>(`/groups/${groupId}/expenses/${expenseId}`, {
+    method: 'DELETE',
+  })
+}
+
+export function fetchSettlements(groupId: string): Promise<SettlementResponse> {
+  return request<SettlementResponse>(`/groups/${groupId}/settlements`)
 }
 
 export type { Member, SplitPercentages }

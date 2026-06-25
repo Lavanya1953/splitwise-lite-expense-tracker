@@ -4,6 +4,7 @@ import { formatCurrency } from '../utils/format'
 interface SettlementBoardProps {
   settlements: SettlementResponse | null
   expenseCount: number
+  groupName?: string
 }
 
 function describeBalance(member: Member, net: number): string {
@@ -16,7 +17,7 @@ function describeBalance(member: Member, net: number): string {
   return `${member} owes ${formatCurrency(Math.abs(net))} overall (paid less than their share).`
 }
 
-export function SettlementBoard({ settlements, expenseCount }: SettlementBoardProps) {
+export function SettlementBoard({ settlements, expenseCount, groupName }: SettlementBoardProps) {
   const hasData = expenseCount > 0 && settlements
 
   const evenMembers = hasData
@@ -30,7 +31,7 @@ export function SettlementBoard({ settlements, expenseCount }: SettlementBoardPr
   return (
     <div className="settlement-board">
       <div className="panel-heading">
-        <h2>Net Balances</h2>
+        <h2>Net Balances{groupName ? ` — ${groupName}` : ''}</h2>
         <p>
           After all expenses, this shows the simplest way for everyone to settle up.
         </p>

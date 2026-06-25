@@ -5,27 +5,34 @@ import type {
   Settlement,
   SplitPercentages,
 } from '../types.js'
-import { GROUP_MEMBERS } from '../types.js'
 
 const EPSILON = 0.01
 
-export function createEqualSplits(): SplitPercentages {
-  const share = Math.floor(100 / GROUP_MEMBERS.length)
-  const remainder = 100 - share * GROUP_MEMBERS.length
+export function createEqualSplits(members: readonly Member[]): SplitPercentages {
+  if (members.length === 0) return {}
+
+  const share = Math.floor(100 / members.length)
+  const remainder = 100 - share * members.length
   return Object.fromEntries(
-    GROUP_MEMBERS.map((member, index) => [
+    members.map((member, index) => [
       member,
       share + (index < remainder ? 1 : 0),
     ]),
-  ) as SplitPercentages
+  )
 }
 
-export function getSplitTotal(splits: SplitPercentages): number {
-  return GROUP_MEMBERS.reduce((sum, member) => sum + splits[member], 0)
+export function getSplitTotal(
+  splits: SplitPercentages,
+  members: readonly Member[],
+): number {
+  return members.reduce((sum, member) => sum + (splits[member] ?? 0), 0)
 }
 
-export function isValidSplitTotal(splits: SplitPercentages): boolean {
-  return Math.abs(getSplitTotal(splits) - 100) < EPSILON
+export function isValidSplitTotal(
+  splits: SplitPercentages,
+  members: readonly Member[],
+): boolean {
+  return Math.abs(getSplitTotal(splits, members) - 100) < EPSILON
 }
 
 export function formatCurrency(amount: number): string {
@@ -35,30 +42,36 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-export function calculateNetBalances(expenses: Expense[]): MemberBalance[] {
+export function calculateNetBalances(
+  expenses: Expense[],
+  members: readonly Member[],
+): MemberBalance[] {
   const balances = Object.fromEntries(
-    GROUP_MEMBERS.map((member) => [member, 0]),
-  ) as Record<Member, number>
+    members.map((member) => [member, 0]),
+  ) as Record<string, number>
 
   for (const expense of expenses) {
     const { amount, payer, splits } = expense
 
-    balances[payer] += amount
+    balances[payer] = (balances[payer] ?? 0) + amount
 
-    for (const member of GROUP_MEMBERS) {
-      const share = (amount * splits[member]) / 100
-      balances[member] -= share
+    for (const member of members) {
+      const share = (amount * (splits[member] ?? 0)) / 100
+      balances[member] = (balances[member] ?? 0) - share
     }
   }
 
-  return GROUP_MEMBERS.map((member) => ({
+  return members.map((member) => ({
     member,
-    net: roundCurrency(balances[member]),
+    net: roundCurrency(balances[member] ?? 0),
   }))
 }
 
-export function minimizeDebts(expenses: Expense[]): Settlement[] {
-  const netBalances = calculateNetBalances(expenses)
+export function minimizeDebts(
+  expenses: Expense[],
+  members: readonly Member[],
+): Settlement[] {
+  const netBalances = calculateNetBalances(expenses, members)
 
   const creditors: { member: Member; amount: number }[] = []
   const debtors: { member: Member; amount: number }[] = []
@@ -99,8 +112,11 @@ export function minimizeDebts(expenses: Expense[]): Settlement[] {
   return settlements
 }
 
-export function getSettlementMessages(expenses: Expense[]): string[] {
-  const settlements = minimizeDebts(expenses)
+export function getSettlementMessages(
+  expenses: Expense[],
+  members: readonly Member[],
+): string[] {
+  const settlements = minimizeDebts(expenses, members)
   const settledMembers = new Set<Member>()
 
   for (const { from, to } of settlements) {
@@ -112,7 +128,7 @@ export function getSettlementMessages(expenses: Expense[]): string[] {
     ({ from, to, amount }) => `${from} owes ${to} ${formatCurrency(amount)}`,
   )
 
-  for (const member of GROUP_MEMBERS) {
+  for (const member of members) {
     if (!settledMembers.has(member)) {
       messages.push(`${member} owes nobody (Even)`)
     }
@@ -121,11 +137,14 @@ export function getSettlementMessages(expenses: Expense[]): string[] {
   return messages
 }
 
-export function buildSettlementResponse(expenses: Expense[]) {
+export function buildSettlementResponse(
+  expenses: Expense[],
+  members: readonly Member[],
+) {
   return {
-    messages: getSettlementMessages(expenses),
-    settlements: minimizeDebts(expenses),
-    netBalances: calculateNetBalances(expenses),
+    messages: getSettlementMessages(expenses, members),
+    settlements: minimizeDebts(expenses, members),
+    netBalances: calculateNetBalances(expenses, members),
   }
 }
 
