@@ -614,7 +614,8 @@
 }
 
 .payment-arrow {
-  font-size: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
