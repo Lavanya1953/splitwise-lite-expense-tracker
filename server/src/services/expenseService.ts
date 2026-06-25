@@ -54,6 +54,13 @@ function validateExpenseInput(input: CreateExpenseInput): void {
       throw new ValidationError(`Invalid split for ${member}`)
     }
   }
+
+  const sharers = GROUP_MEMBERS.filter((member) => input.splits[member] > 0.01)
+  if (sharers.length < 2) {
+    throw new ValidationError(
+      'At least two people must share the expense. Check all participants and split evenly so others owe the payer.',
+    )
+  }
 }
 
 function roundCurrency(value: number): number {
