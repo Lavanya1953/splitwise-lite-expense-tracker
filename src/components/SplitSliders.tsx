@@ -6,6 +6,7 @@ interface SplitSlidersProps {
   members: readonly Member[]
   splits: SplitPercentages
   participants: Set<Member>
+  payer: Member
   amount: number
   onSplitsChange: (splits: SplitPercentages) => void
   onParticipantsChange: (participants: Set<Member>) => void
@@ -36,6 +37,7 @@ export function SplitSliders({
   members,
   splits,
   participants,
+  payer,
   amount,
   onSplitsChange,
   onParticipantsChange,
@@ -46,11 +48,14 @@ export function SplitSliders({
   )
   const remaining = 100 - splitTotal
   const isValid = Math.abs(remaining) < 0.01
+  const checkedCount = participants.size
 
   function toggleParticipant(member: Member) {
+    if (member === payer) return
+
     const next = new Set(participants)
     if (next.has(member)) {
-      if (next.size <= 1) return
+      if (next.size <= 2) return
       next.delete(member)
     } else {
       next.add(member)
@@ -71,28 +76,43 @@ export function SplitSliders({
     <fieldset className="split-sliders">
       <legend>Split Selector</legend>
       <p className="split-help">
-        First choose who shared this expense, then set how much each person pays.
+        <strong>Paid By</strong> is who covered the bill upfront.
+        Check everyone who should <em>pay back their share</em> below.
       </p>
 
       <div className="split-step">
         <h3 className="split-step-title">
           <span className="step-badge">1</span>
-          Who shared this expense?
+          Who should split this bill?
         </h3>
         <div className="participant-checkboxes">
-          {members.map((member) => (
-            <label key={member} className="participant-checkbox">
-              <input
-                type="checkbox"
-                checked={participants.has(member)}
-                onChange={() => toggleParticipant(member)}
-              />
-              <span>{member}</span>
-            </label>
-          ))}
+          {members.map((member) => {
+            const isPayer = member === payer
+            const locked = isPayer
+
+            return (
+              <label
+                key={member}
+                className={`participant-checkbox ${locked ? 'participant-locked' : ''}`}
+                title={locked ? `${payer} paid — always included in the split` : undefined}
+              >
+                <input
+                  type="checkbox"
+                  checked={participants.has(member)}
+                  disabled={locked}
+                  onChange={() => toggleParticipant(member)}
+                />
+                <span>
+                  {member}
+                  {isPayer && <em className="payer-tag">paid</em>}
+                </span>
+              </label>
+            )
+          })}
         </div>
         <p className="split-step-hint">
-          Only checked people are included in the split.
+          Keep everyone checked if you all shared the expense. Uncheck only people who
+          did not participate.
         </p>
       </div>
 
@@ -100,19 +120,20 @@ export function SplitSliders({
         <div className="split-step-header">
           <h3 className="split-step-title">
             <span className="step-badge">2</span>
-            How much does each person pay?
+            Each person&apos;s share (%)
           </h3>
           <button
             type="button"
             className="split-evenly-btn"
             onClick={handleSplitEvenly}
-            disabled={participants.size === 0}
+            disabled={checkedCount < 2}
           >
             Split evenly
           </button>
         </div>
         <p className="split-step-hint">
-          Drag sliders so everyone&apos;s share adds up to <strong>100%</strong>.
+          Use <strong>Split evenly</strong> after selecting participants — then {payer} will
+          be owed by everyone else.
         </p>
 
         {members.map((member) => {
@@ -128,7 +149,7 @@ export function SplitSliders({
               <div className="slider-header">
                 <span className="member-name">
                   {member}
-                  {!included && <em className="not-included">not in split</em>}
+                  {!included && <em className="not-included">not splitting</em>}
                 </span>
                 <span className="slider-values">
                   <strong>{percentage}%</strong>
@@ -165,9 +186,11 @@ export function SplitSliders({
         </div>
         <p className="split-progress-hint">
           {isValid
-            ? 'Ready — splits total 100%.'
+            ? checkedCount < 2
+              ? 'Only one person is splitting — no one else will owe the payer.'
+              : 'Ready — splits total 100%.'
             : remaining > 0
-              ? `${remaining.toFixed(0)}% still unassigned — increase someone's slider.`
+              ? `${remaining.toFixed(0)}% still unassigned — tap Split evenly or adjust sliders.`
               : `${Math.abs(remaining).toFixed(0)}% over 100% — lower someone's slider.`}
         </p>
       </div>

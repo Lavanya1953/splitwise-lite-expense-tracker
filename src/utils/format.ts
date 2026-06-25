@@ -24,3 +24,20 @@ export function isValidSplitTotal(
 ): boolean {
   return Math.abs(getSplitTotal(splits, members) - 100) < 0.01
 }
+
+const EPSILON = 0.01
+
+/** Members who actually owe a portion of this bill (split % > 0). */
+export function getActiveSharers(
+  splits: Record<string, number>,
+  members: readonly string[],
+): string[] {
+  return members.filter((member) => (splits[member] ?? 0) > EPSILON)
+}
+
+export function hasGroupSplit(
+  splits: Record<string, number>,
+  members: readonly string[],
+): boolean {
+  return getActiveSharers(splits, members).length >= 2
+}
