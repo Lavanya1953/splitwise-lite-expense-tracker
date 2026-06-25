@@ -34,6 +34,12 @@ export function createGroup(input: CreateGroupInput): Group {
     throw new GroupValidationError('A group needs at least two members')
   }
 
+  if (findDuplicateGroup(name, members)) {
+    throw new GroupValidationError(
+      'A group with this name or the same members already exists.',
+    )
+  }
+
   const group: Group = {
     id: randomUUID(),
     name,
@@ -69,6 +75,21 @@ function normalizeMembers(members: string[]): string[] {
   }
 
   return result
+}
+
+function memberSetKey(members: readonly string[]): string {
+  return [...members].map((m) => m.toLowerCase()).sort().join('|')
+}
+
+function findDuplicateGroup(name: string, members: string[]): Group | undefined {
+  const nameKey = name.toLowerCase()
+  const membersKey = memberSetKey(members)
+
+  return groups.find(
+    (group) =>
+      group.name.toLowerCase() === nameKey ||
+      memberSetKey(group.members) === membersKey,
+  )
 }
 
 export class GroupValidationError extends Error {

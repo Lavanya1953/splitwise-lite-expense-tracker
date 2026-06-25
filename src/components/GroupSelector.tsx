@@ -33,18 +33,41 @@ export function GroupSelector({
       .map((member) => member.trim())
       .filter(Boolean)
 
+    const uniqueMembers: string[] = []
+    const seen = new Set<string>()
+    for (const member of members) {
+      const key = member.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      uniqueMembers.push(member)
+    }
+
     if (!name.trim()) {
       setFormError('Enter a group name.')
       return
     }
-    if (members.length < 2) {
-      setFormError('Add at least two members, separated by commas.')
+    if (uniqueMembers.length < 2) {
+      setFormError('Add at least two distinct members, separated by commas.')
+      return
+    }
+
+    const nameKey = name.trim().toLowerCase()
+    const membersKey = [...uniqueMembers].map((m) => m.toLowerCase()).sort().join('|')
+    const duplicate = groups.find(
+      (group) =>
+        group.name.toLowerCase() === nameKey ||
+        [...group.members].map((m) => m.toLowerCase()).sort().join('|') === membersKey,
+    )
+    if (duplicate) {
+      setFormError(
+        `Group "${duplicate.name}" already exists with the same name or members.`,
+      )
       return
     }
 
     setSubmitting(true)
     try {
-      await onCreate(name.trim(), members)
+      await onCreate(name.trim(), uniqueMembers)
       setName('')
       setMembersInput('')
       setShowForm(false)
